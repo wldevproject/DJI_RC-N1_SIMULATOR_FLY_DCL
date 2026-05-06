@@ -1,61 +1,153 @@
-DJI RC-N1
-===============
-Discussion thread: coming soon...
+# DJI RC-N1 & Xbox Controller Simulator Emulator
 
-Donate:
+Live support: https://t.me/DJI_RC_N1_SIMULATOR_FLY_DC
 
-<img height="558" src="btc.jpg" width="400"/>
+Donate: https://www.buymeacoffee.com/ivanyakymenko
 
-<img height="450" src="monoQR.jpg" width="400"/>
+---
 
-- https://send.monobank.ua/jar/87uNmHPh5v
-- https://www.buymeacoffee.com/ivanyakymenko 
+Latest version V3.1.0 (2025)
 
------------------------------------------------------------------------------
-Latest version V3.0.0 (26.09.2023)
- - critical fix, com port open error on some PC's
------------------------------------------------------------------------------
+- ✨ Added Xbox 360/One/Series X|S Controller support
+- ✨ Added GUI Controller Tester tool
+- 🔄 Dual input mode: DJI RC-N1 or Xbox Controller
+- 🎯 Auto-detection of connected input devices
+- ✅ Backward compatible with previous versions
+- 🐛 critical fix, com port open error on some PC's
 
- - Connect your DJI Remote Controller to your PC and use it to play simulators
- - Confirmed DJI Mavic 3 RC231
- - For Mavic Mini or a Python interface, take a look at [justin97530/miniDjiController](https://github.com/justin97530/miniDjiController)
- - For DJI Mini 2 or a Python interface, take a look at [usatenko/DjiMini2RCasJoystick](https://github.com/usatenko/DjiMini2RCasJoystick)
- - For DJI Phantom 3 take a look at [mishavoloshchuk/mDjiController](https://github.com/mishavoloshchuk/mDjiController)
------------------------------------------------------------------------------
+---
 
+- 🎮 Connect your DJI Remote Controller **OR** Xbox Controller to your PC and use it to play simulators
+- ✅ Confirmed: DJI Mavic 3 RC231, Xbox 360 Controller for Windows
+- 🔀 Support for other DJI models: [justin97530/miniDjiController](https://github.com/justin97530/miniDjiController)
+- 🔀 DJI Mini 2: [usatenko/DjiMini2RCasJoystick](https://github.com/usatenko/DjiMini2RCasJoystick)
+- 🔀 DJI Phantom 3: [mishavoloshchuk/mDjiController](https://github.com/mishavoloshchuk/mDjiController)
 
-This is a program that connects to your DJI Mavic 3 Remote Controller (RC-N1) as a XBox360 gamepad,
-reads the stick positions and tells Windows that position.
+---
+
+## What is this?
+
+This program connects either:
+
+1. **DJI Mavic 3 Remote Controller (RC-N1)** - as a USB serial input device
+2. **Xbox Controller (360/One/Series)** - as a USB gamepad input
+
+Both are emulated as **Xbox 360 gamepad** for Windows, allowing you to use either controller with flight simulators like DCL - The Game.
 
 <img height="400" src="DJI-RC-N1-Remote-Controller.png" width="400"/>
 
------------------------------------------------------------------------------
-Installation / Usage
-- Install packages before usage:
-- dji-assistant-2-consumer-drones-series and close it after installation https://www.dji.com/downloads/softwares/dji-assistant-2-consumer-drones-series
-- python 3.9 or 3.x
-- pip3 install vgamepad
-- pip3 install pyserial
+---
 
-- Power on RC-N1
-- Connect via bottom type-C
-- run main.py
-- run yor simulator
+## Installation
 
-![](connect_ok.png)
+### Prerequisites
 
-for restart game or recover drone: use camera wheel, left scroll
+- Python 3.9 or later
+- Windows PC
 
-![](control.png)
+### Setup
 
+1. **Install required packages:**
 
-TROUBLESHOOTING
------------------------------------------------------------------------------
-App searching by itself for the serial port with description "DJI USB VCOM For Protocol"
-make sure your device attached via bottom Type-C connector
-![](connect.png)
+```bash
+pip install vgamepad pyserial inputs pygame
+```
 
-[Tested with DCL - The game](https://store.steampowered.com/app/964570/DCL__The_Game/) 
+`inputs` is used first for Xbox controller detection. If your device behaves better with `pygame`, the app can fall back to that path.
+
+2. **For DJI RC-N1 only:**
+   - Download and install [DJI Assistant 2](https://www.dji.com/downloads/softwares/dji-assistant-2-consumer-drones-series)
+   - Close DJI Assistant 2 after installation (driver will remain)
+
+## Usage
+
+### Mode 1: DJI RC-N1 Controller
+
+```bash
+# Auto-detect RC-N1 (if connected via USB Type-C)
+python main.py
+
+# Or specify serial port explicitly
+python main.py -p COM9
+```
+
+### Mode 2: Xbox Controller (360/One/Series)
+
+```bash
+# Use Xbox controller directly
+python main.py -m xbox
+```
+
+### Mode 3: Auto-detect (Default)
+
+```bash
+# Automatically detect and use whichever is connected
+python main.py -m auto
+```
+
+### Batch Files (Windows)
+
+- **start.bat** - Run in RC-N1 mode
+- **test_controller.bat** - Open GUI Controller Tester
+
+## Features
+
+### 🎯 DJI RC-N1 Mode
+
+- Read stick positions from RC-N1 via USB serial
+- Camera wheel controls (scroll up/down for restart/recover)
+- Simulator mode for fast response
+- Support for DJI Mavic 3 RC-N1 and RC231
+
+### 🎮 Xbox Controller Mode
+
+- Support for Xbox 360, Xbox One, Xbox Series X|S
+- Works with both standard sticks and hall effect-style controllers as long as Windows exposes them as an Xbox/XInput gamepad
+- Full analog stick and trigger support
+- All digital buttons (A/B/X/Y/LB/RB)
+- Automatic connection detection
+
+### 🧪 GUI Controller Tester
+
+- Real-time visualization of all controller inputs
+- Live analog stick and trigger values
+- Digital button status display
+- Connection status indicator
+- Great for testing and debugging
+
+Run with: `python test_controller_gui.py` or `test_controller.bat`
+
+---
+
+## TROUBLESHOOTING
+
+**RC-N1 Connection Issues:**
+
+- App automatically searches for serial port with "DJI USB VCOM For Protocol"
+- Make sure your device is attached via **bottom Type-C connector**
+  ![](connect.png)
+
+**Xbox Controller Not Detected:**
+
+- Ensure controller is plugged in via USB or wirelessly connected
+- Check Windows Game Controller settings (Control Panel)
+- Try the GUI Tester to verify connection
+- If one controller model reports slightly different axis/button codes, the tester and runtime now use broader Xbox mappings
+- Install both Xbox input backends if needed: `pip install inputs pygame`
+
+**Controller input not working in game:**
+
+- Make sure game is configured for Xbox 360 gamepad input
+- Test using the GUI Controller Tester first
+- If a controller is recognized in the tester but not in-game, check the axis direction and trigger behavior in `test_controller_gui.py`
+
+**Serial Port Error on RC-N1:**
+
+- Reinstall DJI Assistant 2 drivers
+- Try a different USB port
+- Check Device Manager for "DJI USB" devices
+
+[Tested with DCL - The game](https://store.steampowered.com/app/964570/DCL__The_Game/)
 
     Preset:
     Mode 2

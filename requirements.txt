@@ -1,0 +1,7 @@
+vgamepad>=0.0.7
+pyserial>=3.5
+# Xbox controller support - install ONE of the following:
+inputs>=0.5
+# OR
+pygame>=2.0.0
+
