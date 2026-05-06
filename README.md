@@ -1,9 +1,12 @@
 # DJI RC-N1 & Xbox Controller Simulator Emulator
 
-Live support: https://t.me/DJI_RC_N1_SIMULATOR_FLY_DC
+Fork of the original project:
+https://github.com/IvanYaky/DJI_RC-N1_SIMULATOR_FLY_DCL
 
-Donate: https://www.buymeacoffee.com/ivanyakymenko
+This fork adds support for controllers beyond DJI RC-N1, including Xbox-style gamepads.
 
+For donations and the original project, please visit the creator above.
+This fork is only a personal/open-source modification of their work.
 ---
 
 Latest version V3.1.0 (2025)
