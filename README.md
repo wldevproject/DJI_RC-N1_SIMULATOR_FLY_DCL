@@ -117,6 +117,8 @@ python main.py -m auto
 
 Run with: `python test_controller_gui.py` or `test_controller.bat`
 
+![](Xbox-Controller-Tester.png)
+
 ---
 
 ## TROUBLESHOOTING
@@ -125,7 +127,7 @@ Run with: `python test_controller_gui.py` or `test_controller.bat`
 
 - App automatically searches for serial port with "DJI USB VCOM For Protocol"
 - Make sure your device is attached via **bottom Type-C connector**
-  ![](connect.png)
+  ![](connect_ok.png)
 
 **Xbox Controller Not Detected:**
 
