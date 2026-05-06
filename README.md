@@ -93,6 +93,7 @@ python main.py -m auto
 
 - **start.bat** - Run in RC-N1 mode
 - **test_controller.bat** - Open GUI Controller Tester
+- **build.bat** - Build Windows `.exe` files with PyInstaller
 
 ## Features
 
@@ -122,6 +123,21 @@ python main.py -m auto
 Run with: `python test_controller_gui.py` or `test_controller.bat`
 
 ![](Xbox-Controller-Tester.png)
+
+### Build for Windows users
+
+If you want to share this with people who do not want to install Python, run:
+
+```bash
+build.bat
+```
+
+This creates:
+
+- `dist\DJI-RC-N1-Simulator.exe`
+- `dist\Xbox-Controller-Tester.exe`
+
+Note: Xbox controller mode still needs the Windows virtual gamepad driver used by `vgamepad`.
 
 ---
 

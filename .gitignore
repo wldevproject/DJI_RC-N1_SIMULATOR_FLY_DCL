@@ -1,0 +1,14 @@
+# PyInstaller outputs
+build/
+dist/
+*.spec
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local virtual environment
+.venv/
+
+# IDE files
+.idea/
