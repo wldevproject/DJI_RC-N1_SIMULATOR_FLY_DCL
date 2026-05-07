@@ -311,6 +311,33 @@ This generates:
 - `dist\DJI-RC-N1-Simulator.exe`
 - `dist\Xbox-Controller-Tester.exe`
 
+### GitHub Actions build
+
+This repository also includes a GitHub Actions workflow for Windows builds.
+
+Behavior:
+- every push to `main` builds the `.exe` files
+- every pull request validates that the Windows build still works
+- every tag matching `v*` publishes a GitHub Release with downloadable binaries
+- every workflow run uploads build artifacts, even when no release is created
+
+Typical release flow:
+1. Commit and push your changes
+2. Create a version tag such as `v3.1.1`
+3. Push the tag:
+
+```bash
+git tag v3.1.1
+git push origin v3.1.1
+```
+
+Result:
+- GitHub Actions builds both executables on Windows
+- the workflow uploads the raw `.exe` files
+- GitHub creates a Release and attaches the `.exe` files plus a `.zip` archive
+
+This allows end users to download the Windows binaries directly from the GitHub Releases page without installing Python.
+
 ## DCL Preset
 
 Tested with DCL - The Game:
