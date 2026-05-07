@@ -33,7 +33,7 @@ except (ImportError, Exception) as e:
         print("  pip install pygame")
 
 parser = argparse.ArgumentParser(description='DJI Mavic 3 RC231, RC-N1 + Xbox Controller Support')
-parser.add_argument('-p', '--port', help='RC Serial Port', default="COM9")
+parser.add_argument('-p', '--port', help='RC Serial Port')
 parser.add_argument('-m', '--mode', help='Input mode: rc (RC-N1 only), xbox (Xbox only), auto (detect available)', 
                     default="auto", choices=['rc', 'xbox', 'auto'])
 
@@ -43,6 +43,8 @@ input_mode = args.mode
 serial_connected = False
 xbox_connected = False
 sequence_number = 0x34eb
+lt_trigger = 0
+rt_trigger = 0
 
 gamepad.reset()
 time.sleep(1)
@@ -149,6 +151,11 @@ def detect_pygame_xbox():
     pygame.joystick.init()
     return pygame.joystick.get_count() > 0
 
+def update_camera_from_triggers():
+    """Combine trigger values so RT drives positive and LT drives negative camera actions."""
+    global camera
+    camera = normalize_xbox_axis(rt_trigger, is_trigger=True) - normalize_xbox_axis(lt_trigger, is_trigger=True)
+
 def send_duml(s, source, target, cmd_type, cmd_set, cmd_id, payload = None):
     global sequence_number
     packet = bytearray.fromhex(u'55')
@@ -181,25 +188,38 @@ def send_duml(s, source, target, cmd_type, cmd_set, cmd_id, payload = None):
 
     sequence_number += 1
 
-print('app version: 3.0.1 (Xbox Controller Support)\n')
+print('DJI RC231 Emulator v3.0.1')
 
 # Try to connect to RC-N1 if mode is 'rc' or 'auto'
 s = None
 if input_mode in ['rc', 'auto']:
     try:
-        ports = serial.tools.list_ports.comports(True)
+        if args.port:
+            print(f"Trying configured port: {args.port}")
+            s = serial.Serial(port=args.port, baudrate=115200)
+            print(f'✓ Opened serial port: {s.name}')
+            serial_connected = True
+        else:
+            ports = serial.tools.list_ports.comports(True)
+            candidate_ports = []
 
-        for port in ports:
-            try:
-                print(f"Checking port: {port.description}")
-                if port.description.find("For Protocol") != -1:
-                    print("✓ Found DJI USB VCOM For Protocol")
-                    s = serial.Serial(port=port.name, baudrate=115200)
-                    print(f'✓ Opened serial port: {s.name}')
-                    serial_connected = True
-                    break
-            except (OSError, serial.SerialException):
-                pass
+            for port in ports:
+                try:
+                    if port.description.find("For Protocol") != -1:
+                        candidate_ports.append(port.name)
+                        print(f"Found RC candidate: {port.name} ({port.description})")
+                        s = serial.Serial(port=port.name, baudrate=115200)
+                        print(f'✓ Opened serial port: {s.name}')
+                        serial_connected = True
+                        break
+                except (OSError, serial.SerialException):
+                    pass
+
+            if not serial_connected:
+                if candidate_ports:
+                    print("No available RC serial port could be opened.")
+                else:
+                    print("No RC serial port detected.")
     except serial.SerialException as e:
         print(f'Could not open serial port: {e}')
         if input_mode == 'rc':
@@ -238,14 +258,8 @@ elif input_mode == 'xbox' and not xbox_connected:
     print("\n✗ Xbox mode selected but Xbox controller not found")
     sys.exit(1)
 
-# Stylistic: Newline for spacing.
-print('\nDji RC231 emulation started...\n')
-print('\nClose terminal to stop\n')
-
-print('*******************************************************\n')
-print('* Telegram: https://t.me/DJI_RC_N1_SIMULATOR_FLY_DC   *\n')
-print('* Donate: https://www.buymeacoffee.com/ivanyakymenko  *\n')
-print('*******************************************************\n')
+print('\nEmulator started.')
+print('Close terminal to stop.\n')
 
 # Process input (min 364, center 1024, max 1684) -> (min 0, center 16384, max 32768)
 def parseInput(input):
@@ -288,16 +302,13 @@ def handle_xbox_input():
 
 def handle_xbox_input_inputs():
     """Read Xbox input using 'inputs' library"""
-    global st, camera
+    global st, camera, lt_trigger, rt_trigger
 
     while True:
         try:
             events = get_gamepad()
             for event in events:
                 if event.ev_type == 'Absolute':
-                    if event.state == 0:  # No input
-                        continue
-                    
                     axis_name = None
                     for name, code in XBOX_AXIS_CODES.items():
                         if event.code == code or event.code in XBOX_AXIS_ALIASES.get(name, ()):
@@ -313,9 +324,11 @@ def handle_xbox_input_inputs():
                     elif axis_name == "RY":
                         st["rv"] = normalize_xbox_axis(-event.state)
                     elif axis_name == "LT":
-                        pass
+                        lt_trigger = normalize_trigger_value(event.state)
+                        update_camera_from_triggers()
                     elif axis_name == "RT":
-                        camera = normalize_xbox_axis(normalize_trigger_value(event.state), is_trigger=True)
+                        rt_trigger = normalize_trigger_value(event.state)
+                        update_camera_from_triggers()
                 
                 elif event.ev_type == 'Key':
                     pass
@@ -327,7 +340,7 @@ def handle_xbox_input_inputs():
 
 def handle_xbox_input_pygame():
     """Read Xbox input using pygame library"""
-    global st, camera
+    global st, camera, lt_trigger, rt_trigger
     
     pygame.init()
     pygame.joystick.init()
@@ -364,9 +377,11 @@ def handle_xbox_input_pygame():
                     elif event.axis == 3:  # Right Y
                         st["rv"] = normalize_xbox_axis(int(-event.value * 32767))
                     elif event.axis == 4:  # Left Trigger
-                        pass
+                        lt_trigger = normalize_trigger_value(int((event.value + 1) * 127.5))
+                        update_camera_from_triggers()
                     elif event.axis == 5:  # Right Trigger
-                        camera = normalize_xbox_axis(int((event.value + 1) * 128), is_trigger=True)
+                        rt_trigger = normalize_trigger_value(int((event.value + 1) * 127.5))
+                        update_camera_from_triggers()
                 
                 elif event.type == pygame.JOYBUTTONDOWN:
                     # Y button = 3, B button = 1
@@ -397,9 +412,11 @@ def threaded_function():
         gamepad.right_joystick(int(st["rh"]), int(st["rv"]))
         if camera > 32000:
             gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_Y) #restart race
-        if camera < -32000:
+            gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
+        elif camera < -32000:
             gamepad.press_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_B) #recover drone
-        if camera == 0:
+            gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_Y)
+        else:
             gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_Y)
             gamepad.release_button(vg.XUSB_BUTTON.XUSB_GAMEPAD_B)
         gamepad.update()
@@ -420,11 +437,7 @@ if input_mode == 'xbox':
 try:
     if input_mode == 'rc':
         # RC-N1 mode
-        print('*' * 55)
-        print('* DJI RC-N1 Emulation Mode')
-        print('* Telegram: https://t.me/DJI_RC_N1_SIMULATOR_FLY_DC')
-        print('* Donate: https://www.buymeacoffee.com/ivanyakymenko')
-        print('*' * 55 + '\n')
+        print('Mode: RC-N1 emulation\n')
         
         # enable simulator mode for RC (without this stick positions are sent very slow by RC)
         send_duml(s, 0x0a, 0x06, 0x40, 0x06, 0x24, b'\x01')
@@ -467,13 +480,8 @@ try:
     
     else:
         # Xbox controller mode
-        print('*' * 55)
-        print('* Xbox Controller Emulation Mode')
-        print('* Telegram: https://t.me/DJI_RC_N1_SIMULATOR_FLY_DC')
-        print('* Donate: https://www.buymeacoffee.com/ivanyakymenko')
-        print('*' * 55 + '\n')
-        print('Xbox controller detected and running...')
-        print('Close terminal to stop\n')
+        print('Mode: Xbox controller emulation')
+        print('Controller connected and running.\n')
         
         # Just keep the thread running
         while True:
