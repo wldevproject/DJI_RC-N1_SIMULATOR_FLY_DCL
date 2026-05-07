@@ -323,12 +323,12 @@ Behavior:
 
 Typical release flow:
 1. Commit and push your changes
-2. Create a version tag such as `v3.1.1`
+2. Create a version tag such as `v3.2.0`
 3. Push the tag:
 
 ```bash
-git tag v3.1.1
-git push origin v3.1.1
+git tag v3.2.0
+git push origin v3.2.0
 ```
 
 Result:

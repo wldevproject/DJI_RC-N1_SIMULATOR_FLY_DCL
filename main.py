@@ -188,7 +188,7 @@ def send_duml(s, source, target, cmd_type, cmd_set, cmd_id, payload = None):
 
     sequence_number += 1
 
-print('DJI RC231 Emulator v3.0.1')
+print('DJI RC231 Emulator v3.2.0')
 
 # Try to connect to RC-N1 if mode is 'rc' or 'auto'
 s = None
